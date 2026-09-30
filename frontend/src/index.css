@@ -1,0 +1,65 @@
+import { Routes, Route } from 'react-router-dom';
+import { useState } from 'react';
+import { AuthProvider } from './contexts/AuthContext';
+import { mockProducts } from './data/mockData';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import HomePage from './pages/HomePage';
+import ProductsPage from './pages/ProductsPage';
+import ProductDetailPage from './pages/ProductDetailPage';
+import CartPage from './pages/CartPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
+
+function App() {
+  const [cartItems, setCartItems] = useState([]);
+
+  const addToCart = (product) => {
+    setCartItems((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const updateQuantity = (productId, delta) => {
+    setCartItems((prev) =>
+      prev
+        .map((item) =>
+          item.id === productId ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item
+        )
+        .filter((item) => item.quantity > 0)
+    );
+  };
+
+  const removeFromCart = (productId) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== productId));
+  };
+
+  return (
+    <AuthProvider>
+      <div className="min-h-screen bg-white text-slate-900">
+        <Navbar cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)} />
+
+        <Routes>
+          <Route path="/" element={<HomePage products={mockProducts} addToCart={addToCart} />} />
+          <Route path="/products" element={<ProductsPage products={mockProducts} addToCart={addToCart} />} />
+          <Route path="/product/:id" element={<ProductDetailPage addToCart={addToCart} />} />
+          <Route path="/cart" element={<CartPage cartItems={cartItems} updateQuantity={updateQuantity} removeFromCart={removeFromCart} />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+        </Routes>
+
+        <Footer />
+      </div>
+    </AuthProvider>
+  );
+}
+
+export default App;
